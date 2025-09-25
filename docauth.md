@@ -1,5 +1,5 @@
 
-
+## 基本认证 (Basic Auth)  `express-basic-auth`
 ### 🔑 `express-basic-auth`  认证信息的传输方式
 
 通过 HTTP 请求头（Header）进行传输。这是 HTTP 基本认证（Basic Authentication）的标准协议。
@@ -68,4 +68,4 @@ flowchart TD
 1.  **安全性考虑**：HTTP 基本认证中，密码仅经过 Base64 编码（这相当于明文），并未加密。因此，**在生产环境中务必使用 HTTPS（SSL/TLS）** 来加密整个通信过程，防止密码被窃听。
 2.  **不要放入请求体**：您不需要也不应该将用于基本认证的用户名和密码作为 JSON 或表单数据放在请求体（Body）中。`express-basic-auth` 中间件只会从 `Authorization` 请求头中读取并验证信息。
 
-希望这些解释能帮助您清晰地理解认证信息的传递方式！如果您在实践过程中遇到其他问题，随时可以再问我。
+## Passport.js 与本地策略

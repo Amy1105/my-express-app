@@ -13,121 +13,51 @@ var logger = require('morgan');
 
 const allRoutes = require('./routes'); // 引入聚合后的路由
 
-// var indexRouter = require('./routes/index');
-// var usersRouter = require('./routes/users');
 
 var app = express();
 
+//中间件顺序：
+app.use(logger('dev'));
+//指定日志的输出格式，这是 morgan 中间件（通常变量名就叫 logger）的预定义日志格式
+//
 
-// 1. 配置视图引擎为 EJS
-// Express 会自动 require('ejs')
-app.set('view engine', 'ejs');
+//1.后续中间件可能需要解析后的请求数据（如请求体、Cookie）
+app.use(express.urlencoded({ extended: false })); // 解析表单提交的数据
+app.use(express.json()); // 解析 JSON 数据
+app.use(cookieParser());
 
-// 2. 配置视图目录
-// __dirname 是当前文件所在的目录
-// path.join(__dirname, 'views') 确保了路径在任何操作系统下都正确
-// 如果你的视图文件夹就叫 'views' 并且在根目录，这行可以省略，因为它是默认值
-app.set('views', path.join(__dirname, 'views'));
+// 配置会话（Passport 依赖会话来持久化登录状态）
+app.use(session({
+  secret: 'your-secret-key', // 用于签名会话ID cookie的密钥，请使用一个复杂的字符串
+  resave: false,
+  saveUninitialized: false
+}));
 
 
-//passport中间件设置
-app.use(express.urlencoded({ extended: false })); // 用于解析登录表单提交的数据
-app.use(session({ secret: 'your-secret-key', resave: false, saveUninitialized: false }));
-app.use(passport.initialize());
-app.use(passport.session());
-//passport中间件设置
+//2、静态文件
+app.use(express.static(path.join(__dirname, 'public'))); 
 
-app.use('/static', express.static('public'))
+//3、日志记录、通用权限检查
 
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
-
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.set('views', path.join(__dirname, 'views')); //告诉 Express"模板文件在哪里"
+//app.set('view engine', 'jade'); //告诉 Express"使用哪种模板引擎"
+app.set('view engine', 'ejs');
 
 
+// 3. 初始化 Passport 并使其与会话协同工作
+app.use(passport.initialize());
+app.use(passport.session());
 
-// 配置 Passport 本地策略
-passport.use(new LocalStrategy(
-    function(username, password, done) {
-        // 1. 根据用户名查找用户（这里替换为你的数据库查询）
-        User.findOne({ username: username }, function (err, user) {
-            if (err) { return done(err); }
-            // 2. 用户不存在
-            if (!user) {
-                return done(null, false, { message: '用户名不正确。' });
-            }
-            // 3. 密码不匹配（这里应使用bcrypt等库进行哈希比对）
-            if (!validPassword(user, password)) { // 替换为你的密码验证逻辑
-                return done(null, false, { message: '密码不正确。' });
-            }
-            // 4. 认证成功，返回用户对象
-            return done(null, user);
-        });
-    }
-));
 
-// 配置序列化和反序列化用户（用于在会话中存储和读取用户信息）
-passport.serializeUser(function(user, done) {
-    done(null, user.id);
-});
+// 执行 Passport 配置（传入 passport 实例）
+require('./middleware/passport')(passport);
 
-passport.deserializeUser(function(id, done) {
-    User.findById(id, function (err, user) {
-        done(err, user);
-    });
-});
 
-// 定义路由
-// 登录页面
-app.get('/login', (req, res) => {
-    res.send(`
-        <form action="/login" method="post">
-            <div>
-                <label>用户名:</label>
-                <input type="text" name="username"/>
-            </div>
-            <div>
-                <label>密码:</label>
-                <input type="password" name="password"/>
-            </div>
-            <div>
-                <input type="submit" value="登录"/>
-            </div>
-        </form>
-    `);
-});
-
-// 处理登录请求
-app.post('/login', 
-    passport.authenticate('local', { 
-        successRedirect: '/dashboard', // 登录成功跳转
-        failureRedirect: '/login',     // 登录失败跳转
-        // failureFlash: true // 可选，配合connect-flash显示错误消息
-    })
-);
-
-// 受保护的仪表板页面
-app.get('/dashboard', (req, res) => {
-    // 使用 `req.isAuthenticated()` 检查用户是否已登录
-    if (!req.isAuthenticated()) {
-        return res.redirect('/login');
-    }
-    res.send(`欢迎回来，${req.user.username}！<a href="/logout">退出</a>`);
-});
-
-// 退出登录
-app.get('/logout', (req, res) => {
-    req.logout(function(err) {
-        if (err) { return next(err); }
-        res.redirect('/');
-    });
-});
-
+//4.路由配置
+// 将路由挂载到应用上
+// 现在所有在 router.js 中定义的路由（如 /login, /dashboard）都会生效
+app.use('/', router); 
 // 所有以 '/' 开头的请求都会交给 indexRouter 处理
 // app.use('/', indexRouter);
 // app.use('/users', usersRouter);
@@ -136,12 +66,9 @@ app.get('/logout', (req, res) => {
 // 这一行就相当于注册了所有的路由规则
 app.use(allRoutes);
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
 
-// error handler
+
+// 5.异常处理 error handler
 app.use(function(err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
@@ -152,6 +79,10 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
+// 6.404处理 catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  next(createError(404));
+});
 
 
 const port = 3000;
