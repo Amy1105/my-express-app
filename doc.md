@@ -318,4 +318,10 @@ app.use((err, req, res, next) => {
 app.listen(3000);
 ```
 
-希望这个详细的解释和示例能帮助你彻底掌握 Express 中间件的注册顺序！如果你在具体实践中遇到更特殊的情况，随时可以再问我。
+
+### 各种包解析
+
+```bash
+# console 是 Node.js 环境下的全局对象，TypeScript 需要对应的类型定义文件才能识别
+npm install @types/node --save-dev
+```
