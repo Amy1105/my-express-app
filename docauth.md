@@ -12,7 +12,8 @@
 3.  在编码后的字符串前加上 `Basic `（注意有一个空格），最终形成完整的请求头值。
 
 一个完整的请求头看起来是这样的：
-```
+
+```javascript
 Authorization: Basic YWRtaW46c3VwZXJzZWNyZXRwYXNzd29yZA==
 ```
 

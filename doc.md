@@ -2,14 +2,12 @@
 
 ## init 
 ```bash
-
 # 1. 创建一个你的项目目录并进入
 mkdir my-express-app
 cd my-express-app
 
 # 2. 初始化项目，会生成一个 package.json 文件
 npm init -y
-
 ```
 
 ## 安装express
@@ -47,7 +45,6 @@ app.listen(port, () => {
 
 ## 应用程序生成器  在Node.js 8.2.0以上可用
 ``` bash
-
 npx express-generator
 
 ```
@@ -55,9 +52,6 @@ npx express-generator
 ## 路由
 
 ## 中间件
-
-## 各种中间件 
-
 
 ### 认证中间件
 
@@ -81,7 +75,7 @@ npx express-generator
 npm install express-basic-auth
 ```
 
-**见app-auth**
+[[docauth]] **详细用法**
 
 ### 🔑 Passport.js 与本地策略
 
@@ -195,17 +189,9 @@ app.listen(3000);
 2.  **安全地存储密码**：**绝对不要**在数据库中以明文存储密码。应使用 **bcrypt** 这样的专业密码哈希算法，对密码进行加盐哈希处理。
 3.  **会话安全**：使用 Passport.js 时，确保会话密钥 (`secret`) 是强大且保密的。
 
-### 💎 如何选择
-
--   如果你的需求只是一个**极其简单、内部使用、无需考虑复杂安全性的工具**，可以尝试 `express-basic-auth`（务必搭配HTTPS）。
--   如果你在构建一个**面向公众的、需要用户注册登录的正式 Web 应用**，那么 **Passport.js 配合本地策略**是更可靠、更专业的选择。
-
-希望这些解释和示例能帮助你理解如何在 Express 中实现用户名和密码认证！如果你对特定步骤（比如用 bcrypt 哈希密码）有更多疑问，我们可以继续深入探讨。
-
 
 
 ## 中间件注册顺序
-
 
 | 顺序 | 中间件类型 | 示例/说明 | 关键原因 |
 | :--- | :--- | :--- | :--- |
